@@ -1,0 +1,12 @@
+/* css styles */
+
+/* Justificar todo o texto */
+body, p {
+  text-align: justify;
+}
+
+body {
+    max-width: 100%;
+    width: 95%;
+    margin: auto;
+}

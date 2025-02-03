@@ -1,0 +1,500 @@
+---
+title: "Índice de Gini"
+subtitle: "Remuneração dos Servidores Públicos Federais"
+author:
+  - name: "CGINF - Coordenação Geral de Informações Gerenciais "
+    affiliation: "DESIN - Departamento de Soluções Digitais e Informações Gerenciais"
+date: "`r Sys.Date()`"
+abstract: |
+  Este tutorial aborda o cálculo e a visualização do Índice de Gini, uma medida estatística amplamente utilizada para avaliar a desigualdade na distribuição de renda em populações ou regiões.
+categories: [Carreiras, Remuneração, FUncionalismo Público, Índice de Gini, Desigualdade Salarial, Servidores Públicos Federais, SIAPE]  
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    number-depth: 1
+    theme: cosmo  # Ou journal para um estilo mais formal
+    highlight-style: github
+    css: styles.css  # Arquivo customizado para ajustes
+    code_folding: show
+    code-fold: true
+    toc_float:
+      collapsed: true
+
+---
+
+# Introdução
+
+A desigualdade salarial entre os servidores públicos federais é um tema relevante para o debate sobre justiça distributiva e eficiência na gestão pública. Este relatório analisa a distribuição dos rendimentos utilizando o **Índice de Gini**, uma métrica amplamente utilizada para avaliar desigualdade de renda.
+
+O Índice de Gini permite medir a dispersão dos rendimentos dentro do funcionalismo, possibilitando uma análise mais detalhada da concentração salarial entre diferentes órgãos e carreiras. Compreender esse indicador é essencial para subsidiar políticas de gestão de pessoal e avaliar o impacto das estruturas salariais na administração pública.
+
+Essa métrica fornece um valor numérico que varia de 0 a 1, onde 0 representa igualdade perfeita (todas as pessoas possuem a mesma renda) e 1 representa desigualdade máxima (uma única pessoa detém toda a renda, enquanto as demais não possuem nenhuma) [@hoffmann2006].
+
+Ao calcular o Índice de Gini para a remuneração dos servidores públicos, é possível obter uma compreensão clara da distribuição salarial no setor público federal. Esse índice é frequentemente utilizado por economistas, pesquisadores e gestores para medir e comparar a desigualdade entre órgãos, carreiras e ao longo do tempo. A partir dessa análise, é possível identificar padrões de concentração salarial e avaliar o impacto de políticas de reajuste, progressão e reestruturação de carreiras.
+
+Dentre os aspectos analisáveis com o Índice de Gini na remuneração dos servidores públicos federais, destacam-se:
+
+-   Disparidades salariais entre diferentes órgãos e carreiras;
+-   Diferenças de remuneração associadas a fatores demográficos, como gênero, raça e tempo de serviço;
+-   Impacto de políticas de valorização profissional na redução da desigualdade;
+-   Efeitos da progressividade ou regressividade dos planos de carreira;
+-   Comparação da desigualdade salarial ao longo do tempo e em diferentes períodos de ajuste fiscal.
+
+
+# Cálculo do Índice de Gini
+
+O Índice de Gini é calculado da seguinte maneira:
+
+$$
+G = \frac{\sum_{i=1}^{n} \sum_{j=1}^{n} |x_i - x_j|}{2n^2 \bar{x}}
+$$
+
+Onde:  
+- \( G \) é o Índice de Gini.  
+- \( n \) é o número de observações na amostra.  
+- \( x_i \) são os valores ordenados da variável de renda.  
+- \( x_j \) são os valores ordenados da mesma variável de renda.  
+- \( |\cdot| \) representa o valor absoluto.  
+- \( \bar{x} \) é a média da variável de renda.
+
+
+# Análise dos Dados
+
+Para ilustrar a aplicação do Índice de Gini na remuneração dos servidores públicos federais, utilizaremos dados do Sistema Integrado de Administração de Pessoal (SIAPE). Esses dados contêm informações sobre a remuneração de servidores do Poder Executivo Federal.
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+# carregar a base de dados em excel e compilar todas as abas em um único arquivo
+
+
+# Carregando as bibliotecas necessárias
+library(readxl)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+library(ggtext)
+library(ggdist)
+library(glue)
+library(patchwork)
+library(camcorder)
+library(gt)
+
+gg_record(dir = "tidytuesday-temp", device = "png", width = 10, height = 8, units = "in", dpi = 320)
+
+# Define o caminho do arquivo
+file_path <- "data/BaseDados_EstudoDesigualdades.xlsx"
+
+# Obtém os nomes de todas as abas no Excel
+sheet_names <- excel_sheets(file_path)
+
+# excluir abas que não serão utilizadas 
+# aba FORA 
+
+sheet_names <- sheet_names[!sheet_names %in% c("FORA")]
+
+# Lê todas as abas e combina em uma única base usando purrr::map
+BaseDados_Unica <- sheet_names %>%
+  map_df(~ read_excel(file_path, sheet = .x) %>%
+           mutate(sheet_name = .x)) # Adiciona o nome da aba como coluna (opcional)
+
+# filtrar apenas campos que possuem servidores
+
+df_gini <- BaseDados_Unica |> janitor::clean_names() |> 
+  rename( "2026" = ano_2026,  "2023"= mai_23 ) |>
+  pivot_longer(`2023`:`2026`, names_to = "Ano", values_to = "remun") |>
+  filter(qtd > 0) 
+
+df_gini %>%
+    DT::datatable(rownames = FALSE, filter = "top",
+                  options = list(pageLength = 5, scrollX = TRUE))
+
+```
+
+
+## Por Subgrupo de Carreiras  
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# Expandir a base de dados com base na quantidade de observações
+df_expandido <- df_gini %>%
+  uncount(qtd)
+
+# Calculo do indice de gini por ano
+ df_gini_subgrupo <- df_expandido |> 
+  filter(Ano == "2026") |> 
+  group_by(subgrupo) |>  
+  mutate(
+    total_remun = sum(remun, na.rm = TRUE),
+    gini_index = ifelse(total_remun > 0, reldist::gini(remun), NA)
+  ) |> 
+  ungroup()
+ 
+ df_gini_subgrupo <- df_gini_subgrupo %>% arrange(desc(gini_index))
+ df_gini_subgrupo$subgrupo <- factor(df_gini_subgrupo$subgrupo, levels = unique(df_gini_subgrupo$subgrupo))
+ 
+ 
+ ano <- unique(df_gini_subgrupo$Ano)
+ mean_remun <- mean(df_gini_subgrupo$remun, na.rm = TRUE)
+ median_remun <- median(df_gini_subgrupo$remun, na.rm = TRUE)
+ bg_color <- "grey97"
+ font_family <- "Fira Sans"
+ 
+ 
+ # Formatar {mean_remun} para moeda brasileira R$ e {median_remun} para moeda brasileira R$ com o pacate scales formato brasil
+ 
+ library(scales)
+ 
+ # Criando um formatador para moeda brasileira
+ format_brl <- label_number(big.mark = ".", decimal.mark = ",", prefix = "R$ ", , accuracy = 0.01)
+ 
+ plot_subtitle <- glue("A remuneração média é de {format_brl(mean_remun)} e a mediana é de {format_brl(median_remun)}.
+                       <br>")
+ 
+ 
+ # Gráfico com o boxplot e outras informações
+ 
+ p <- df_gini_subgrupo%>% 
+   ggplot(aes(subgrupo, remun)) +
+ stat_halfeye(fill_type = "segments", alpha = 0.3, scale = 6) +
+   geom_boxplot(alpha = 0.1, outlier.shape = NA, colour = "grey" ) +
+  stat_interval(  ) +
+   stat_summary(geom = "point", fun = median) +
+   annotate("text", x =11, y = 0, label = "(\U00F8 Índice de Gini)",
+            family = "Fira Sans", size = 3, hjust = 0.5) +
+   stat_summary(
+     aes(y = gini_index),
+     geom = "text",
+     fun.data = function(x) {
+       data.frame(
+         y = 0,
+         label = sprintf("(%s)", scales::number(mean(ifelse(x > 0, x, NA), na.rm = TRUE), accuracy = 0.010)))},
+     family = font_family, size = 2.5
+   ) +
+   geom_hline(yintercept = median_remun, col = "grey30", lty = "dashed") +
+   annotate("text", x = 11, y = median_remun + 50, label = "Remuneração Mediana Geral",
+            family = "Fira Sans", size = 3, hjust = 0)  +
+   scale_x_discrete(labels = toupper, expand = c(0, 1)) +
+   scale_y_continuous(breaks = seq(2500, 40000, 2500)) +
+   scale_color_manual(values = MetBrewer::met.brewer("VanGogh3")) +
+   coord_flip(ylim = c(0, 55000), clip = "off") +
+   guides(col = "none") +
+   labs(
+     title = toupper(glue("Índice de Gini por subgrupo de servidores públicos no ano de {ano}.")),
+     subtitle = plot_subtitle,
+     caption = "Fonte: SIAPE",
+     x = NULL,
+     y = "Remuneração (R$)"
+   ) +
+   theme_minimal(base_family = font_family, base_size = 10) +
+   theme(
+     plot.background = element_rect(color = NA, fill = bg_color),
+     panel.grid = element_blank(),
+     panel.grid.major.x = element_line(linewidth = 0.1, color = "grey75"),
+     plot.title = element_text(family = "Fira Sans SemiBold"),
+     plot.title.position = "plot",
+     plot.subtitle = element_textbox_simple(
+       margin = margin(t = 4, b = 4), size = 8),
+     plot.caption = element_textbox_simple(
+       margin = margin(t = 12), size = 7
+     ),
+     plot.caption.position = "plot",
+     axis.text.y = element_text(hjust = 0, margin = margin(r = 1.5), family = "Fira Sans SemiBold"),
+     plot.margin = margin(4, 14, 4, 4),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+   )
+ 
+# p
+rent_title_words = readr::read_csv("data/rent_title_words.csv")
+# create the dataframe for the legend (inside plot)
+df_for_legend <- rent_title_words %>% 
+  filter(word == "beautiful")
+
+p_legend <- df_for_legend %>% 
+  ggplot(aes(word, price)) +
+  stat_halfeye(fill_type = "segments", alpha = 0.3) +
+  stat_interval() +
+  stat_summary(geom = "point", fun = median) +
+  annotate(
+    "richtext",
+    x = c(0.8, 0.8, 0.8, 1.4, 1.8),
+    y = c(1000, 5000, 3000, 2400, 4000),
+    label = c("50 % dos servidores<br>recebem abaixo desse valor", "95 % dos servidores", 
+              "80 % dos servidores", "Mediana", "Distribuição<br>da remuneração"),
+    fill = NA, label.size = 0, family = font_family, size = 2, vjust = 1,
+  ) +
+  geom_curve(
+    data = data.frame(
+      x = c(0.9, 0.80, 0.80, 1.225, 1.8),
+      xend = c(0.95, 0.95, 0.95, 1.075, 1.8),
+      y = c(1000, 5000, 3000, 2300, 3800),
+      yend = c(1800, 5000, 3000, 2100, 2500)),
+    aes(x = x, xend = xend, y = y, yend = yend),
+    stat = "unique", curvature = 0.2, size = 0.2, color = "grey12",
+    arrow = arrow(angle = 20, length = unit(1, "mm"))
+  ) +
+  scale_color_manual(values = MetBrewer::met.brewer("VanGogh3")) +
+  coord_flip(xlim = c(0.75, 1.3), ylim = c(0, 6000), expand = TRUE) +
+  guides(color = "none") +
+  labs(title = "Legenda") +
+  theme_void(base_family = font_family) +
+  theme(plot.title = element_text(family = "Fira Sans SemiBold", size = 9,
+                                  hjust = 0.075),
+        plot.background = element_rect(color = "grey30", size = 0.1, fill = bg_color))
+
+# p_legend
+# Insert the custom legend into the plot
+p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.86, b = 0.6, clip = FALSE)
+
+knitr::include_graphics("tidytuesday-temp/2025_01_31_10_04_47.190668.png")
+
+knitr::include_graphics("tidytuesday-temp/2025_01_31_14_44_04.771656.png")
+
+```
+
+
+## Por Escolaridade
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# Expandir a base de dados com base na quantidade de observações
+df_expandido <- df_gini %>%
+  uncount(qtd)
+
+# Calculo do indice de gini por ano
+ df_gini_subgrupo <- df_expandido |> 
+  filter(Ano == "2023") |> 
+    group_by(escolaridade_cargo) |>  
+  mutate(
+    total_remun = sum(remun, na.rm = TRUE),
+    gini_index = ifelse(total_remun > 0, reldist::gini(remun), NA)
+  ) |> 
+  ungroup()
+ 
+ df_gini_subgrupo <- df_gini_subgrupo %>% arrange(desc(gini_index))
+ df_gini_subgrupo$escolaridade_cargo <- factor(df_gini_subgrupo$escolaridade_cargo, levels = unique(df_gini_subgrupo$escolaridade_cargo))
+ 
+ 
+ ano <- unique(df_gini_subgrupo$Ano)
+ mean_remun <- mean(df_gini_subgrupo$remun, na.rm = TRUE)
+ median_remun <- median(df_gini_subgrupo$remun, na.rm = TRUE)
+ bg_color <- "grey97"
+ font_family <- "Fira Sans"
+ 
+ 
+ # Formatar {mean_remun} para moeda brasileira R$ e {median_remun} para moeda brasileira R$ com o pacate scales formato brasil
+ 
+ library(scales)
+ 
+ # Criando um formatador para moeda brasileira
+ format_brl <- label_number(big.mark = ".", decimal.mark = ",", prefix = "R$ ", , accuracy = 0.01)
+ 
+ plot_subtitle <- glue("A remuneração média é de {format_brl(mean_remun)} e a mediana é de {format_brl(median_remun)}.
+                       <br>")
+ 
+ 
+ # Gráfico com o boxplot e outras informações
+ 
+ p <- df_gini_subgrupo%>% 
+   ggplot(aes(escolaridade_cargo, remun)) +
+ stat_halfeye(fill_type = "segments", alpha = 0.3, scale = 6) +
+   geom_boxplot(alpha = 0.1, outlier.shape = NA, colour = "grey" ) +
+  stat_interval(  ) +
+   stat_summary(geom = "point", fun = median) +
+   annotate("text", x =5, y = 0, label = "(\U00F8 Índice de Gini)",
+            family = "Fira Sans", size = 3, hjust = 0.5) +
+   stat_summary(
+     aes(y = gini_index),
+     geom = "text",
+     fun.data = function(x) {
+       data.frame(
+         y = 0,
+         label = sprintf("(%s)", scales::number(mean(ifelse(x > 0, x, NA), na.rm = TRUE), accuracy = 0.010)))},
+     family = font_family, size = 2.5
+   ) +
+   geom_hline(yintercept = median_remun, col = "grey30", lty = "dashed") +
+   annotate("text", x = 5, y = median_remun + 50, label = "Remuneração Mediana Geral",
+            family = "Fira Sans", size = 3, hjust = 0)  +
+   scale_x_discrete(labels = toupper, expand = c(0, 1)) +
+   scale_y_continuous(breaks = seq(2500, 40000, 2500)) +
+   scale_color_manual(values = MetBrewer::met.brewer("VanGogh3")) +
+   coord_flip(ylim = c(0, 40000), clip = "off") +
+   guides(col = "none") +
+   labs(
+     title = toupper(glue("Índice de Gini por subgrupo de servidores públicos no ano de {ano}.")),
+     subtitle = plot_subtitle,
+     caption = "Fonte: SIAPE",
+     x = NULL,
+     y = "Remuneração (R$)"
+   ) +
+   theme_minimal(base_family = font_family, base_size = 10) +
+   theme(
+     plot.background = element_rect(color = NA, fill = bg_color),
+     panel.grid = element_blank(),
+     panel.grid.major.x = element_line(linewidth = 0.1, color = "grey75"),
+     plot.title = element_text(family = "Fira Sans SemiBold"),
+     plot.title.position = "plot",
+     plot.subtitle = element_textbox_simple(
+       margin = margin(t = 4, b = 4), size = 8),
+     plot.caption = element_textbox_simple(
+       margin = margin(t = 12), size = 7
+     ),
+     plot.caption.position = "plot",
+     axis.text.y = element_text(hjust = 0, margin = margin(r = 1.5), family = "Fira Sans SemiBold"),
+     plot.margin = margin(4, 14, 4, 4),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+   )
+ 
+# p
+rent_title_words = readr::read_csv("data/rent_title_words.csv")
+# create the dataframe for the legend (inside plot)
+df_for_legend <- rent_title_words %>% 
+  filter(word == "beautiful")
+
+p_legend <- df_for_legend %>% 
+  ggplot(aes(word, price)) +
+  stat_halfeye(fill_type = "segments", alpha = 0.3) +
+  stat_interval() +
+  stat_summary(geom = "point", fun = median) +
+  annotate(
+    "richtext",
+    x = c(0.8, 0.8, 0.8, 1.4, 1.8),
+    y = c(1000, 5000, 3000, 2400, 4000),
+    label = c("50 % dos servidores<br>recebem abaixo desse valor", "95 % dos servidores", 
+              "80 % dos servidores", "Mediana", "Distribuição<br>da remuneração"),
+    fill = NA, label.size = 0, family = font_family, size = 2, vjust = 1,
+  ) +
+  geom_curve(
+    data = data.frame(
+      x = c(0.9, 0.80, 0.80, 1.225, 1.8),
+      xend = c(0.95, 0.95, 0.95, 1.075, 1.8),
+      y = c(1000, 5000, 3000, 2300, 3800),
+      yend = c(1800, 5000, 3000, 2100, 2500)),
+    aes(x = x, xend = xend, y = y, yend = yend),
+    stat = "unique", curvature = 0.2, size = 0.2, color = "grey12",
+    arrow = arrow(angle = 20, length = unit(1, "mm"))
+  ) +
+  scale_color_manual(values = MetBrewer::met.brewer("VanGogh3")) +
+  coord_flip(xlim = c(0.75, 1.3), ylim = c(0, 6000), expand = TRUE) +
+  guides(color = "none") +
+  labs(title = "Legenda") +
+  theme_void(base_family = font_family) +
+  theme(plot.title = element_text(family = "Fira Sans SemiBold", size = 9,
+                                  hjust = 0.075),
+        plot.background = element_rect(color = "grey30", size = 0.1, fill = bg_color))
+
+# p_legend
+# Insert the custom legend into the plot
+p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.56, b = 0.4, clip = TRUE)
+
+knitr::include_graphics("tidytuesday-temp/2025_01_31_15_13_35.783732.png")
+
+knitr::include_graphics("tidytuesday-temp/2025_01_31_15_12_42.288213.png")
+
+```
+
+
+## Por Órgão
+
+O Índice de Gini também pode ser calculado para diferentes órgãos do Poder Executivo Federal, permitindo uma análise mais detalhada da desigualdade salarial entre instituições. A seguir, apresentamos um gráfico demostrando a evolução do  Índice de Gini por órgão no ano de 2023 e 2026.
+
+Observa-se que em 2026, em azul, o Índice de Gini apresentou uma redução em relação a 2023, em vermelho, para a maioria dos órgãos. Nos casos em que o Índice de Gini não apresentou redução, o gráfico apresenta apenas o indice em 2026
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# Expandir a base de dados com base na quantidade de observações
+df_expandido <- df_gini %>%
+  uncount(qtd)
+
+# Calculo do indice de gini por ano
+df_gini_orgao <- df_expandido |> 
+  #filter(Ano == "2023") |> 
+  group_by(orgao_area, Ano) |>  
+  summarise(
+    total_remun = sum(remun, na.rm = TRUE),
+    gini_index = ifelse(total_remun > 0, reldist::gini(remun), NA)
+  ) |> 
+  select(-total_remun) |>
+  ungroup() |> 
+  mutate(gini_index = round(gini_index, 2))
+  
+
+
+# pivotar wide 
+
+df_gini_orgao_wide <- df_gini_orgao |> 
+  pivot_wider(names_from = Ano, values_from = gini_index) |> 
+  mutate(gap = `2023` - `2026`) |> 
+  group_by(orgao_area) |>
+  mutate(
+    max=max(`2023`, `2026`)) |>
+  ungroup() 
+ 
+
+# Reordenando a variável orgao_area com base no gap em ordem decrescente
+
+df_long_i <- df_gini_orgao_wide |> 
+  arrange(desc(abs(gap))) |> 
+ 
+  mutate(labels=forcats::fct_reorder(orgao_area , abs(gap))) |>
+  ungroup()
+ 
+
+df_long <- df_long_i %>% select(-c(orgao_area))%>% 
+  pivot_longer(`2023`: `2026`, names_to = "name", values_to = "value") 
+
+library(forcats)
+library(scales)
+
+nudge_value = 0.2
+
+p_main <- df_long %>%
+  ggplot(aes(x = value, y = labels)) +
+  
+  # Linhas entre os pontos
+  geom_line(aes(group = labels), color = "gray70", linewidth = 2) +
+  
+  # Pontos com cores personalizadas
+  geom_point(aes(color = name), size = 3) +
+  
+  # Rótulos para os valores
+  geom_text(aes(label = label_number(accuracy = 0.001)(value), color = name),
+            size = 3,
+            fontface = "bold",
+            nudge_x = if_else(df_long$value == df_long$max, 0.02, -0.02),
+            hjust = if_else(df_long$value == df_long$max, 0, 1)) +
+  
+  # Adicionando legenda personalizada ao lado direito do gráfico
+  geom_text(aes(label = name, color = name),
+            data = df_long %>% filter(gap == max(gap)),
+            nudge_y = 1,
+            fontface = "bold",
+            size = 3.5) +
+  
+  # Estilizando tema
+  theme_light(base_size = 12) + 
+  theme(legend.position = "none",
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.text.x = element_text(color = "#666666", size = 8),
+        axis.title = element_blank(),
+        panel.grid.major.y = element_line(color = "gray90", linetype = "dashed"),
+        panel.grid.minor = element_blank()) +
+  
+  # Título e legendas
+  labs(
+    title = "Índice de Gini por Órgão (2023 e 2026)",
+    caption = "Fonte: SIAPE",
+  ) +
+  
+  # Ajustando cores
+  scale_color_manual(values = c("#BF2F24", "#436685")) +
+  
+  # Ajustando limites do gráfico
+  coord_cartesian(ylim = c(0, 50)) 
+
+knitr::include_graphics("tidytuesday-temp/2025_02_03_14_45_21.663065.png")
+
+```
+
+# Referências
