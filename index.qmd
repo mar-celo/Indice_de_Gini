@@ -37,7 +37,6 @@ Ao calcular o Índice de Gini para a remuneração dos servidores públicos, é 
 Dentre os aspectos analisáveis com o Índice de Gini na remuneração dos servidores públicos federais, destacam-se:
 
 -   Disparidades salariais entre diferentes órgãos e carreiras;
--   Diferenças de remuneração associadas a fatores demográficos, como gênero, raça e tempo de serviço;
 -   Impacto de políticas de valorização profissional na redução da desigualdade;
 -   Efeitos da progressividade ou regressividade dos planos de carreira;
 -   Comparação da desigualdade salarial ao longo do tempo e em diferentes períodos de ajuste fiscal.
@@ -108,7 +107,14 @@ df_gini <- BaseDados_Unica |> janitor::clean_names() |>
 
 df_gini %>%
     DT::datatable(rownames = FALSE, filter = "top",
-                  options = list(pageLength = 5, scrollX = TRUE))
+                  options = list(pageLength = 5, scrollX = TRUE)) %>%
+    DT::formatStyle(
+        columns = names(df_gini), 
+        target = "row",
+        lineHeight = "12px",  # Reduz a altura das linhas
+        fontSize = "12px"  # Reduz o tamanho da fonte
+    )
+
 
 ```
 
