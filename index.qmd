@@ -98,9 +98,14 @@ BaseDados_Unica <- sheet_names %>%
   map_df(~ read_excel(file_path, sheet = .x) %>%
            mutate(sheet_name = .x)) # Adiciona o nome da aba como coluna (opcional)
 
+# preencher valores NA na coluna escolaridade_cargo com "Não Informado"
+
+
+
 # filtrar apenas campos que possuem servidores
 
 df_gini <- BaseDados_Unica |> janitor::clean_names() |> 
+  replace_na(list(escolaridade_cargo = "Sem informação")) |>
   rename( "2026" = ano_2026,  "2023"= mai_23 ) |>
   pivot_longer(`2023`:`2026`, names_to = "Ano", values_to = "remun") |>
   filter(qtd > 0) 
@@ -270,13 +275,15 @@ df_expandido <- df_gini %>%
 
 # Calculo do indice de gini por ano
  df_gini_subgrupo <- df_expandido |> 
-  filter(Ano == "2023") |> 
+  filter(Ano == "2026") |> 
     group_by(escolaridade_cargo) |>  
   mutate(
     total_remun = sum(remun, na.rm = TRUE),
     gini_index = ifelse(total_remun > 0, reldist::gini(remun), NA)
   ) |> 
   ungroup()
+ 
+ 
  
  df_gini_subgrupo <- df_gini_subgrupo %>% arrange(desc(gini_index))
  df_gini_subgrupo$escolaridade_cargo <- factor(df_gini_subgrupo$escolaridade_cargo, levels = unique(df_gini_subgrupo$escolaridade_cargo))
@@ -394,9 +401,9 @@ p_legend <- df_for_legend %>%
 # Insert the custom legend into the plot
 p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.56, b = 0.4, clip = TRUE)
 
-knitr::include_graphics("tidytuesday-temp/2025_01_31_15_13_35.783732.png")
+knitr::include_graphics("tidytuesday-temp/2025_02_03_18_36_37.816252.png")
 
-knitr::include_graphics("tidytuesday-temp/2025_01_31_15_12_42.288213.png")
+knitr::include_graphics("tidytuesday-temp/2025_02_03_18_38_37.843374.png")
 
 ```
 
