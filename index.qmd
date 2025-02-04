@@ -126,6 +126,10 @@ df_gini %>%
 
 ## Por Subgrupo de Carreiras  
 
+::: {.panel-tabset}
+
+### 2023
+
 ```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
 
 # Expandir a base de dados com base na quantidade de observações
@@ -260,12 +264,24 @@ p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.86, b = 0.6, clip = FALSE)
 
 knitr::include_graphics("tidytuesday-temp/2025_01_31_10_04_47.190668.png")
 
-knitr::include_graphics("tidytuesday-temp/2025_01_31_14_44_04.771656.png")
+
 
 ```
 
+###  2026
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+knitr::include_graphics("tidytuesday-temp/2025_01_31_14_44_04.771656.png")
+```
+:::
+
+
 
 ## Por Escolaridade
+
+::: {.panel-tabset}
+
+### 2023
 
 ```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
 
@@ -403,9 +419,20 @@ p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.56, b = 0.4, clip = TRUE)
 
 knitr::include_graphics("tidytuesday-temp/2025_02_03_18_36_37.816252.png")
 
+
+
+```
+
+### 2026
+
+```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
 knitr::include_graphics("tidytuesday-temp/2025_02_03_18_38_37.843374.png")
 
 ```
+
+
+:::
 
 
 ## Por Órgão
