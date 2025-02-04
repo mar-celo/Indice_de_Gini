@@ -3,7 +3,7 @@ title: "Índice de Gini"
 subtitle: "Remuneração dos Servidores Públicos Federais"
 author:
   - name: "CGINF - Coordenação Geral de Informações Gerenciais "
-    affiliation: "DESIN - Departamento de Soluções Digitais e Informações Gerenciais"
+    affiliation: "DIGID - Diretoria de Governança e Inteligência de dados"
 date: "`r Sys.Date()`"
 abstract: |
   Este tutorial aborda o cálculo e a visualização do Índice de Gini, uma medida estatística amplamente utilizada para avaliar a desigualdade na distribuição de renda em populações ou regiões.
