@@ -1,0 +1,68 @@
+---
+title: "Índice de Gini"
+subtitle: "Remuneração dos Servidores Públicos Federais"
+author: 
+  - name: "CGINF - Coordenação Geral de Informações Gerenciais"
+    affiliation: "DIGID - Diretoria de Governança e Inteligência de Dados"
+date: "`r Sys.Date()`"
+format:
+  revealjs:
+    slide-number: true
+    toc: false
+    transition: slide
+    incremental: true
+    fig-align: center
+    code-fold: true
+    highlight-style: github
+    css: styles.css
+editor: visual
+---
+
+# Introdução
+
+A desigualdade salarial entre os servidores públicos federais é um tema relevante para o debate sobre justiça distributiva e eficiência na gestão pública.
+
+- **O Índice de Gini** permite medir a dispersão dos rendimentos.
+- Ajuda a avaliar políticas salariais e estrutura remuneratória do funcionalismo.
+
+---
+
+# O que é o Índice de Gini?
+
+> **O Índice de Gini mede a desigualdade de renda.**  
+> Varia de 0 (igualdade total) a 1 (máxima desigualdade).
+
+### Fórmula:
+$$
+G = \frac{\sum_{i=1}^{n} \sum_{j=1}^{n} |x_i - x_j|}{2n^2 \bar{x}}
+$$
+
+- **\( G \)**: Índice de Gini  
+- **\( x_i \), \( x_j \)**: Renda ordenada  
+- **\( \bar{x} \)**: Média da renda  
+
+---
+
+# Análise dos Dados
+
+- Utilizamos dados do SIAPE sobre a remuneração dos servidores públicos federais.
+- O gráfico abaixo mostra a distribuição da remuneração:
+
+```{r, echo=FALSE}
+# Código do gráfico (removendo mensagens e warnings)
+library(ggplot2)
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() +
+  theme_minimal()
+```
+
+---
+
+# Conclusão
+
+- O Índice de Gini é uma ferramenta essencial para analisar desigualdade salarial.
+- Os dados analisados podem orientar políticas públicas mais equitativas.
+
+**Dúvidas?**
+
+**Contato:** CGINF - DIGID

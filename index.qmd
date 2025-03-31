@@ -20,7 +20,7 @@ format:
     code_folding: show
     code-fold: true
     toc_float:
-      collapsed: true
+      collapsed: false
 
 ---
 
@@ -79,8 +79,10 @@ library(glue)
 library(patchwork)
 library(camcorder)
 library(gt)
+library(ggstatsplot)
+library(plotly)
 
-gg_record(dir = "tidytuesday-temp", device = "png", width = 10, height = 8, units = "in", dpi = 320)
+#gg_record(dir = "tidytuesday-temp", device = "png", width = 10, height = 8, units = "in", dpi = 320)
 
 # Define o caminho do arquivo
 file_path <- "data/BaseDados_EstudoDesigualdades.xlsx"
@@ -220,7 +222,8 @@ df_expandido <- df_gini %>%
     axis.text.x = element_text(angle = 45, hjust = 1)
    )
  
-# p
+
+ # p
 rent_title_words = readr::read_csv("data/rent_title_words.csv")
 # create the dataframe for the legend (inside plot)
 df_for_legend <- rent_title_words %>% 
@@ -536,5 +539,312 @@ p_main <- df_long %>%
 knitr::include_graphics("tidytuesday-temp/2025_02_03_14_45_21.663065.png")
 
 ```
+
+::: {.panel-tabset}
+
+### 2023
+
+```{r}
+set.seed(123)
+
+p <- ggdotplotstats(
+  data       = df_long |> filter(name == "2023"),
+  y          = labels,
+  x          = value,
+  test.value = 55,
+  type       = "robust",
+  title      = "Indice de Gini por Órgão",
+  xlab       = "Indice de Gini",
+  group      = name,  # Diferencia os anos por cor
+  ggtheme    = theme_minimal()
+) 
+
+ggplotly(p)
+```
+
+
+### 2026
+
+```{r}
+set.seed(123)
+
+p <- ggdotplotstats(
+  data       = df_long |> filter(name == "2026"),
+  y          = labels,
+  x          = value,
+  test.value = 55,
+  type       = "robust",
+  title      = "Indice de Gini por Órgão",
+  xlab       = "Indice de Gini",
+  group      = name,  # Diferencia os anos por cor
+  ggtheme    = theme_minimal()
+) 
+
+ggplotly(p)
+```
+
+:::
+
+# Estatísticas descritivas da remuneração dos servidores públicos federais
+
+
+```{r}
+library(plotly)
+library(ggplot2)
+
+# Gráfico de barras para 'subgrupo', separado por 'ano'
+p1 <- ggplot(df_expandido, aes(x = subgrupo)) +
+  geom_bar(fill = "steelblue") +
+  theme_minimal() +
+  labs(title = "Distribuição por Subgrupo ", x = "Subgrupo", y = "Contagem") 
+  #facet_wrap(~ Ano) # Separa os gráficos por ano
+
+ggplotly(p1) # Transforma em um gráfico interativo
+
+
+
+```
+
+# Descritivas por ano
+
+
+```{r, warning=FALSE, message=FALSE}
+library(gtsummary)
+library(dplyr)
+
+# Criar tabelas separadas para cada ano
+tabela_2023 <- df_expandido %>%
+  filter(Ano == "2023") %>%
+  select(subgrupo, remun) %>%
+  tbl_summary(by = subgrupo) 
+#  modify_caption("**Ano 2023**")
+
+tabela_2026 <- df_expandido %>%
+  filter(Ano == "2026") %>%
+  select(subgrupo, remun) %>%
+  tbl_summary(by = subgrupo)
+ # modify_caption("**Ano 2026**")
+
+# Empilhar as tabelas verticalmente
+tabela_empilhada <- tbl_stack(
+  list(tabela_2023, tabela_2026),
+  group_header = c("Ano 2023", "Ano 2026") # Adiciona título para cada tabela
+)
+
+# Exibir a tabela empilhada
+tabela_empilhada
+
+
+
+```
+
+# Demais estatísticas descritivas
+
+::: {.panel-tabset}
+
+### 2023
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)
+library(gt)
+
+df_summary <- df_expandido %>% 
+  filter(Ano == "2023") %>%
+  group_by(subgrupo) %>%
+  summarise(
+    mean = mean(remun, na.rm = TRUE),
+    sd = sd(remun, na.rm = TRUE),
+    min = min(remun, na.rm = TRUE),
+    max = max(remun, na.rm = TRUE),
+    median = median(remun, na.rm = TRUE),
+    cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
+    n = n()  # Número total de observações
+  )
+
+# Gerar a tabela formatada
+df_summary %>%
+  gt() %>%
+  tab_header(
+    title = "Estatísticas Descritivas por Subgrupo"
+  ) %>%
+  tab_spanner(
+    label = "Estatísticas",
+    columns = c(mean, sd, min, max, median, cv)
+  ) %>%
+  cols_label(
+    mean = "Média",
+    sd = "Desvio Padrão",
+    min = "Mínimo",
+    max = "Máximo",
+    median = "Mediana",
+    cv = "Coeficiente de Variação",
+    n = "Total de Observações"
+  ) %>%
+  fmt_currency(
+    columns = vars(mean, sd, min, max, median),
+    currency = "BRL",
+    decimals = 2
+  ) %>%
+  fmt_number(
+    columns = vars(cv),
+    decimals = 2
+  )
+
+
+
+
+```
+
+
+### 2026
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)
+library(gt)
+
+df_summary <- df_expandido %>% 
+  filter(Ano == "2026") %>%
+  group_by(subgrupo) %>%
+  summarise(
+    mean = mean(remun, na.rm = TRUE),
+    sd = sd(remun, na.rm = TRUE),
+    min = min(remun, na.rm = TRUE),
+    max = max(remun, na.rm = TRUE),
+    median = median(remun, na.rm = TRUE),
+    cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
+    n = n()  # Número total de observações
+  )
+
+# Gerar a tabela formatada
+df_summary %>%
+  gt() %>%
+  tab_header(
+    title = "Estatísticas Descritivas por Subgrupo"
+  ) %>%
+  tab_spanner(
+    label = "Estatísticas",
+    columns = c(mean, sd, min, max, median, cv)
+  ) %>%
+  cols_label(
+    mean = "Média",
+    sd = "Desvio Padrão",
+    min = "Mínimo",
+    max = "Máximo",
+    median = "Mediana",
+    cv = "Coeficiente de Variação",
+    n = "Total de Observações"
+  ) %>%
+  fmt_currency(
+    columns = vars(mean, sd, min, max, median),
+    currency = "BRL",
+    decimals = 2
+  ) %>%
+  fmt_number(
+    columns = vars(cv),
+    decimals = 2
+  )
+
+
+
+
+```
+
+
+::: 
+
+### Box Plot
+
+::: {.panel-tabset}
+
+### 2023
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(scales)  # Para formatar como moeda
+
+ggplot(df_expandido |> filter(Ano == '2023'), aes(x = subgrupo, y = remun)) +
+  geom_boxplot(fill = "skyblue", color = "black", alpha = 0.5) +  # Boxplot
+  stat_summary(  # Adiciona a média como ponto
+    fun = mean,  
+    geom = "point",  
+    shape = 18,  # Formato do ponto (estrela)
+    size = 3,  
+    color = "red"
+  ) +
+  stat_summary(  # Adiciona o valor da média como texto formatado
+    fun = mean,  
+    geom = "text",  
+    aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(..y..)),  
+    vjust = -0.5,  
+    color = "red",  
+    size = 3.5  
+  ) +
+  labs(
+    title = "Distribuição de Remuneração por Subgrupo",
+    x = "Subgrupo",
+    y = "Remuneração"
+  ) +
+  theme_minimal()
+
+
+
+```
+
+### 2026
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(scales)  # Para formatar como moeda
+
+ggplot(df_expandido |> filter(Ano == '2026'), aes(x = subgrupo, y = remun)) +
+  geom_boxplot(fill = "skyblue", color = "black", alpha = 0.5) +  # Boxplot
+  stat_summary(  # Adiciona a média como ponto
+    fun = mean,  
+    geom = "point",  
+    shape = 18,  # Formato do ponto (estrela)
+    size = 3,  
+    color = "red"
+  ) +
+  stat_summary(  # Adiciona o valor da média como texto formatado
+    fun = mean,  
+    geom = "text",  
+    aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(..y..)),  
+    vjust = -0.5,  
+    color = "red",  
+    size = 3.5  
+  ) +
+  labs(
+    title = "Distribuição de Remuneração por Subgrupo",
+    x = "Subgrupo",
+    y = "Remuneração"
+  ) +
+  theme_minimal()
+
+
+
+```
+
+```{r}
+ggplot(df_expandido, aes(x = remun)) +
+  geom_histogram(binwidth = 500, fill = "lightgreen", alpha = 0.7) +
+  facet_wrap(~subgrupo) +  # Facetando por subgrupo
+  labs(
+    title = "Distribuição da Remuneração por Subgrupo",
+    x = "Remuneração",
+    y = "Frequência"
+  ) +
+  theme_minimal()
+
+```
+
+
+```{r}
+df_expandido |> filter(Ano == "2023") |> ggstatsplot::ggbetweenstats(
+  x = subgrupo,
+  y = remun,
+  title = "Distribuição de Remuneração por Subgrupo (2023)"
+)
+```
+
 
 # Referências
