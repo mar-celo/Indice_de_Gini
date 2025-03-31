@@ -824,6 +824,10 @@ ggplot(df_expandido |> filter(Ano == '2026'), aes(x = subgrupo, y = remun)) +
 
 ```
 
+:::
+
+# histograma
+
 ```{r}
 ggplot(df_expandido, aes(x = remun)) +
   geom_histogram(binwidth = 500, fill = "lightgreen", alpha = 0.7) +
