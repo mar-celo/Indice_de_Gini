@@ -21,7 +21,6 @@ format:
     code-fold: true
     toc_float:
       collapsed: false
-
 ---
 
 # Introdução
@@ -41,7 +40,6 @@ Dentre os aspectos analisáveis com o Índice de Gini na remuneração dos servi
 -   Efeitos da progressividade ou regressividade dos planos de carreira;
 -   Comparação da desigualdade salarial ao longo do tempo e em diferentes períodos de ajuste fiscal.
 
-
 # Cálculo do Índice de Gini
 
 O Índice de Gini é calculado da seguinte maneira:
@@ -50,14 +48,13 @@ $$
 G = \frac{\sum_{i=1}^{n} \sum_{j=1}^{n} |x_i - x_j|}{2n^2 \bar{x}}
 $$
 
-Onde:  
-- \( G \) é o Índice de Gini.  
-- \( n \) é o número de observações na amostra.  
-- \( x_i \) são os valores ordenados da variável de renda.  
-- \( x_j \) são os valores ordenados da mesma variável de renda.  
-- \( |\cdot| \) representa o valor absoluto.  
-- \( \bar{x} \) é a média da variável de renda.
-
+Onde:\
+- ( G ) é o Índice de Gini.\
+- ( n ) é o número de observações na amostra.\
+- ( x_i ) são os valores ordenados da variável de renda.\
+- ( x_j ) são os valores ordenados da mesma variável de renda.\
+- ( \|\cdot\| ) representa o valor absoluto.\
+- ( \bar{x} ) é a média da variável de renda.
 
 # Análise dos Dados
 
@@ -79,6 +76,7 @@ library(glue)
 library(patchwork)
 library(camcorder)
 library(gt)
+
 library(ggstatsplot)
 library(plotly)
 
@@ -125,11 +123,9 @@ df_gini %>%
 
 ```
 
+## Por Subgrupo de Carreiras
 
-## Por Subgrupo de Carreiras  
-
-::: {.panel-tabset}
-
+::: panel-tabset
 ### 2023
 
 ```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
@@ -263,7 +259,7 @@ p_legend <- df_for_legend %>%
 
 # p_legend
 # Insert the custom legend into the plot
-p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.86, b = 0.6, clip = FALSE)
+#p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.86, b = 0.6, clip = FALSE)
 
 knitr::include_graphics("tidytuesday-temp/2025_01_31_10_04_47.190668.png")
 
@@ -271,19 +267,16 @@ knitr::include_graphics("tidytuesday-temp/2025_01_31_10_04_47.190668.png")
 
 ```
 
-###  2026
+### 2026
 
 ```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
 knitr::include_graphics("tidytuesday-temp/2025_01_31_14_44_04.771656.png")
 ```
 :::
 
-
-
 ## Por Escolaridade
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### 2023
 
 ```{r, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
@@ -418,7 +411,7 @@ p_legend <- df_for_legend %>%
 
 # p_legend
 # Insert the custom legend into the plot
-p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.56, b = 0.4, clip = TRUE)
+#p + inset_element(p_legend, l = 0.6, r = 1.0,  t = 0.56, b = 0.4, clip = TRUE)
 
 knitr::include_graphics("tidytuesday-temp/2025_02_03_18_36_37.816252.png")
 
@@ -433,14 +426,11 @@ knitr::include_graphics("tidytuesday-temp/2025_02_03_18_36_37.816252.png")
 knitr::include_graphics("tidytuesday-temp/2025_02_03_18_38_37.843374.png")
 
 ```
-
-
 :::
-
 
 ## Por Órgão
 
-O Índice de Gini também pode ser calculado para diferentes órgãos do Poder Executivo Federal, permitindo uma análise mais detalhada da desigualdade salarial entre instituições. A seguir, apresentamos um gráfico demostrando a evolução do  Índice de Gini por órgão no ano de 2023 e 2026.
+O Índice de Gini também pode ser calculado para diferentes órgãos do Poder Executivo Federal, permitindo uma análise mais detalhada da desigualdade salarial entre instituições. A seguir, apresentamos um gráfico demostrando a evolução do Índice de Gini por órgão no ano de 2023 e 2026.
 
 Observa-se que em 2026, em azul, o Índice de Gini apresentou uma redução em relação a 2023, em vermelho, para a maioria dos órgãos. Nos casos em que o Índice de Gini não apresentou redução, o gráfico apresenta apenas o indice em 2026
 
@@ -540,11 +530,10 @@ knitr::include_graphics("tidytuesday-temp/2025_02_03_14_45_21.663065.png")
 
 ```
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### 2023
 
-```{r}
+```{r dotplot, warning=FALSE, message=FALSE}
 set.seed(123)
 
 p <- ggdotplotstats(
@@ -555,13 +544,13 @@ p <- ggdotplotstats(
   type       = "robust",
   title      = "Indice de Gini por Órgão",
   xlab       = "Indice de Gini",
+  ylab       = "Órgão",
   group      = name,  # Diferencia os anos por cor
-  ggtheme    = theme_minimal()
+  ggtheme    = theme_minimal(8)
 ) 
 
 ggplotly(p)
 ```
-
 
 ### 2026
 
@@ -576,17 +565,16 @@ p <- ggdotplotstats(
   type       = "robust",
   title      = "Indice de Gini por Órgão",
   xlab       = "Indice de Gini",
+  ylab       = "Órgão",
   group      = name,  # Diferencia os anos por cor
-  ggtheme    = theme_minimal()
+  ggtheme    = theme_minimal(8)
 ) 
 
 ggplotly(p)
 ```
-
 :::
 
 # Estatísticas descritivas da remuneração dos servidores públicos federais
-
 
 ```{r}
 library(plotly)
@@ -606,7 +594,6 @@ ggplotly(p1) # Transforma em um gráfico interativo
 ```
 
 # Descritivas por ano
-
 
 ```{r, warning=FALSE, message=FALSE}
 library(gtsummary)
@@ -640,151 +627,233 @@ tabela_empilhada
 
 # Demais estatísticas descritivas
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### 2023
 
 ```{r, warning=FALSE, message=FALSE}
+
 library(dplyr)
+library(scales)
 library(gt)
 
-df_summary <- df_expandido %>% 
-  filter(Ano == "2023") %>%
-  group_by(subgrupo) %>%
-  summarise(
-    mean = mean(remun, na.rm = TRUE),
-    sd = sd(remun, na.rm = TRUE),
-    min = min(remun, na.rm = TRUE),
-    max = max(remun, na.rm = TRUE),
-    median = median(remun, na.rm = TRUE),
-    cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
-    n = n()  # Número total de observações
-  )
+gerar_resumo <- function(df, ano) {
+  df %>%
+    filter(Ano == ano) %>%
+    group_by(subgrupo) %>%
+    summarise(
+      mean = label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(mean(remun, na.rm = TRUE)),
+      sd = label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(sd(remun, na.rm = TRUE)),
+      min = label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(min(remun, na.rm = TRUE)),
+      max = label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(max(remun, na.rm = TRUE)),
+      median = label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(median(remun, na.rm = TRUE)),
+      cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
+      n = n()
+    )
+}
 
-# Gerar a tabela formatada
-df_summary %>%
-  gt() %>%
-  tab_header(
-    title = "Estatísticas Descritivas por Subgrupo"
-  ) %>%
-  tab_spanner(
-    label = "Estatísticas",
-    columns = c(mean, sd, min, max, median, cv)
-  ) %>%
-  cols_label(
-    mean = "Média",
-    sd = "Desvio Padrão",
-    min = "Mínimo",
-    max = "Máximo",
-    median = "Mediana",
-    cv = "Coeficiente de Variação",
-    n = "Total de Observações"
-  ) %>%
-  fmt_currency(
-    columns = vars(mean, sd, min, max, median),
-    currency = "BRL",
-    decimals = 2
-  ) %>%
-  fmt_number(
-    columns = vars(cv),
-    decimals = 2
-  )
+gerar_tabela <- function(df_summary) {
+  df_summary %>%
+    gt() %>%
+    tab_header(
+      title = "Estatísticas Descritivas por Subgrupo"
+    ) %>%
+    tab_spanner(
+      label = "Estatísticas",
+      columns = c(mean, sd, min, max, median, cv)
+    ) %>%
+    cols_label(
+      mean = "Média",
+      sd = "Desvio Padrão",
+      min = "Mínimo",
+      max = "Máximo",
+      median = "Mediana",
+      cv = "Coeficiente de Variação",
+      n = "Total de Observações"
+    ) %>%
+    fmt_currency(
+      columns = vars(mean, sd, min, max, median),
+      currency = "BRL",
+      decimals = 2
+    ) %>%
+    fmt_number(
+      columns = vars(cv),
+      decimals = 2
+    ) |> 
+    tab_options(
+      table.font.size = px(12)
+    )
+}
 
+# Exemplo de uso:
+df_summary <- gerar_resumo(df_expandido, "2023")
+gerar_tabela(df_summary)
 
 
 
 ```
-
 
 ### 2026
 
 ```{r, warning=FALSE, message=FALSE}
+df_summary <- gerar_resumo(df_expandido, "2026")
+gerar_tabela(df_summary)
+
+```
+:::
+
+# Comparação de anos em uma única tabela
+
+```{r}
 library(dplyr)
+library(scales)
 library(gt)
 
-df_summary <- df_expandido %>% 
-  filter(Ano == "2026") %>%
-  group_by(subgrupo) %>%
-  summarise(
-    mean = mean(remun, na.rm = TRUE),
-    sd = sd(remun, na.rm = TRUE),
-    min = min(remun, na.rm = TRUE),
-    max = max(remun, na.rm = TRUE),
-    median = median(remun, na.rm = TRUE),
-    cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
-    n = n()  # Número total de observações
-  )
+gerar_resumo_duplo <- function(df, ano1, ano2) {
+  df_summary_ano1 <- df %>%
+    filter(Ano == ano1) %>%
+    group_by(subgrupo) %>%
+    summarise(
+      mean = mean(remun, na.rm = TRUE),
+      sd = sd(remun, na.rm = TRUE),
+      min = min(remun, na.rm = TRUE),
+      max = max(remun, na.rm = TRUE),
+      median = median(remun, na.rm = TRUE),
+      cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    )
 
-# Gerar a tabela formatada
-df_summary %>%
-  gt() %>%
-  tab_header(
-    title = "Estatísticas Descritivas por Subgrupo"
-  ) %>%
-  tab_spanner(
-    label = "Estatísticas",
-    columns = c(mean, sd, min, max, median, cv)
-  ) %>%
-  cols_label(
-    mean = "Média",
-    sd = "Desvio Padrão",
-    min = "Mínimo",
-    max = "Máximo",
-    median = "Mediana",
-    cv = "Coeficiente de Variação",
-    n = "Total de Observações"
-  ) %>%
-  fmt_currency(
-    columns = vars(mean, sd, min, max, median),
-    currency = "BRL",
-    decimals = 2
-  ) %>%
-  fmt_number(
-    columns = vars(cv),
-    decimals = 2
-  )
+  df_summary_ano2 <- df %>%
+    filter(Ano == ano2) %>%
+    group_by(subgrupo) %>%
+    summarise(
+      mean = mean(remun, na.rm = TRUE),
+      sd = sd(remun, na.rm = TRUE),
+      min = min(remun, na.rm = TRUE),
+      max = max(remun, na.rm = TRUE),
+      median = median(remun, na.rm = TRUE),
+      cv = sd(remun, na.rm = TRUE) / mean(remun, na.rm = TRUE),
+      n = n(),
+      .groups = "drop"
+    )
 
+  # Juntar os dois dataframes pela coluna 'subgrupo'
+  df_summary <- df_summary_ano1 %>%
+    inner_join(df_summary_ano2, by = "subgrupo", suffix = c(paste0("_", ano1), paste0("_", ano2))) %>%
+    mutate(
+      mean = paste0(
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(mean_2023),
+        " -> ",
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(mean_2026)
+      ),
+      sd = paste0(
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(sd_2023),
+        " -> ",
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(sd_2026)
+      ),
+      min = paste0(
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(min_2023),
+        " -> ",
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(min_2026)
+      ),
+      max = paste0(
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(max_2023),
+        " -> ",
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(max_2026)
+      ),
+      median = paste0(
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(median_2023),
+        " -> ",
+        label_dollar(big.mark = ".", decimal.mark = ",", prefix = "R$ ")(median_2026)
+      ),
+      cv = paste0(round(cv_2023, 2), " -> ", round(cv_2026, 2)),
+      n = paste0(n_2023, " -> ", n_2026)
+    ) %>%
+    select(subgrupo, mean, sd, min, max, median, cv, n)
 
+  return(df_summary)
+}
 
+gerar_tabela <- function(df_summary) {
+  df_summary %>%
+    gt() %>%
+    tab_header(
+      title = "Estatísticas Descritivas por Subgrupo (Comparação de Anos)"
+    ) %>%
+    tab_spanner(
+      label = "Estatísticas (2023 -> 2026)",
+      columns = c(mean, sd, min, max, median, cv)
+    ) %>%
+    cols_label(
+      mean = "Média",
+      sd = "Desvio Padrão",
+      min = "Mínimo",
+      max = "Máximo",
+      median = "Mediana",
+      cv = "Coeficiente de Variação",
+      n = "Total de Observações"
+    ) |> 
+    tab_options(
+      table.font.size = px(12)
+    )
+}
+
+# Exemplo de uso:
+df_summary <- gerar_resumo_duplo(df_expandido, "2023", "2026")
+gerar_tabela(df_summary)
 
 ```
 
 
-::: 
+
 
 ### Box Plot
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ### 2023
 
 ```{r, warning=FALSE, message=FALSE}
 library(ggplot2)
 library(scales)  # Para formatar como moeda
 
-ggplot(df_expandido |> filter(Ano == '2023'), aes(x = subgrupo, y = remun)) +
-  geom_boxplot(fill = "skyblue", color = "black", alpha = 0.5) +  # Boxplot
-  stat_summary(  # Adiciona a média como ponto
-    fun = mean,  
-    geom = "point",  
-    shape = 18,  # Formato do ponto (estrela)
-    size = 3,  
-    color = "red"
-  ) +
-  stat_summary(  # Adiciona o valor da média como texto formatado
-    fun = mean,  
-    geom = "text",  
-    aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(..y..)),  
-    vjust = -0.5,  
-    color = "red",  
-    size = 3.5  
-  ) +
-  labs(
-    title = "Distribuição de Remuneração por Subgrupo",
-    x = "Subgrupo",
-    y = "Remuneração"
-  ) +
-  theme_minimal()
+gerar_boxplot <- function(df, ano) {
+  ggplot(df |> filter(Ano == ano), aes(x = subgrupo, y = remun)) +
+    geom_boxplot(fill = "skyblue", color = "black", alpha = 0.5) +  # Boxplot
+    stat_summary(  # Adiciona a média como ponto
+      fun = mean,  
+      geom = "point",  
+      shape = 18,  # Formato do ponto (estrela)
+      size = 3,  
+      color = "red"
+    ) +
+    stat_summary(  # Adiciona o valor da média como texto formatado
+      fun = mean,  
+      geom = "text",  
+      aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(..y..)),  
+      vjust = -0.5,  
+      color = "red",  
+      size = 3.5  
+    ) +
+    scale_y_continuous(labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")) +  # Formata eixo Y
+    labs(
+      title = paste("Distribuição de Remuneração por Subgrupo -", ano),
+      x = "Subgrupo",
+      y = "Remuneração"
+    ) +
+    annotate(
+      "text", x = 1, y = max(df$remun, na.rm = TRUE), 
+      label = "Média da Remuneração", 
+      color = "red", size = 4, hjust = 0
+    ) +  # Anotação no gráfico
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 10)  # Rotaciona e reduz a fonte do eixo X
+    )
+}
+
+# Exemplo de uso:
+gerar_boxplot(df_expandido, "2023")
+
 
 
 
@@ -793,43 +862,37 @@ ggplot(df_expandido |> filter(Ano == '2023'), aes(x = subgrupo, y = remun)) +
 ### 2026
 
 ```{r, warning=FALSE, message=FALSE}
-library(ggplot2)
-library(scales)  # Para formatar como moeda
-
-ggplot(df_expandido |> filter(Ano == '2026'), aes(x = subgrupo, y = remun)) +
-  geom_boxplot(fill = "skyblue", color = "black", alpha = 0.5) +  # Boxplot
-  stat_summary(  # Adiciona a média como ponto
-    fun = mean,  
-    geom = "point",  
-    shape = 18,  # Formato do ponto (estrela)
-    size = 3,  
-    color = "red"
-  ) +
-  stat_summary(  # Adiciona o valor da média como texto formatado
-    fun = mean,  
-    geom = "text",  
-    aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(..y..)),  
-    vjust = -0.5,  
-    color = "red",  
-    size = 3.5  
-  ) +
-  labs(
-    title = "Distribuição de Remuneração por Subgrupo",
-    x = "Subgrupo",
-    y = "Remuneração"
-  ) +
-  theme_minimal()
+gerar_boxplot(df_expandido, "2026")
 
 
 
 ```
-
 :::
+
+
+::: panel-tabset
 
 # histograma
 
+### 2023
+
 ```{r}
-ggplot(df_expandido, aes(x = remun)) +
+ggplot(df_expandido |> filter(Ano == "2023"), aes(x = remun)) +
+  geom_histogram(binwidth = 500, fill = "lightgreen", alpha = 0.7) +
+  facet_wrap(~subgrupo) +  # Facetando por subgrupo
+  labs(
+    title = "Distribuição da Remuneração por Subgrupo",
+    x = "Remuneração",
+    y = "Frequência"
+  ) +
+  theme_minimal()
+
+```
+### 2026 
+
+```{r}
+
+ggplot(df_expandido |> filter(Ano == "2026"), aes(x = remun)) +
   geom_histogram(binwidth = 500, fill = "lightgreen", alpha = 0.7) +
   facet_wrap(~subgrupo) +  # Facetando por subgrupo
   labs(
@@ -841,9 +904,26 @@ ggplot(df_expandido, aes(x = remun)) +
 
 ```
 
+:::
 
-```{r}
+
+
+
+# Comparação de médias entre grupos
+
+### 2023
+```{r final,  warning=FALSE, message=FALSE}
 df_expandido |> filter(Ano == "2023") |> ggstatsplot::ggbetweenstats(
+  x = subgrupo,
+  y = remun,
+  title = "Distribuição de Remuneração por Subgrupo (2023)"
+)
+```
+
+### 2026
+
+```{r final2,  warning=FALSE, message=FALSE}
+df_expandido |> filter(Ano == "2026") |> ggstatsplot::ggbetweenstats(
   x = subgrupo,
   y = remun,
   title = "Distribuição de Remuneração por Subgrupo (2023)"
