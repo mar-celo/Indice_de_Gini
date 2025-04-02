@@ -7,8 +7,10 @@ website:
   navbar:
     left:
       - href: index.qmd
-        text: Home
-      - about.qmd
+        text: Estatísticas descritivas
+      - href: metodologia.qmd
+        text: Outros indicadores de desigualdade
+      
 
 format:
   html:

@@ -1,0 +1,526 @@
+---
+title: "Indicadores de Desigualdade"
+---
+
+# Razão Salarial
+
+## Por subgrupos de carreiras
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(readxl)
+library(purrr)
+library(tidyr)
+
+# Define o caminho do arquivo
+file_path <- "data/BaseDados_EstudoDesigualdades.xlsx"
+
+# Obtém os nomes de todas as abas no Excel
+sheet_names <- excel_sheets(file_path)
+
+# excluir abas que não serão utilizadas 
+# aba FORA 
+
+sheet_names <- sheet_names[!sheet_names %in% c("FORA")]
+
+# Lê todas as abas e combina em uma única base usando purrr::map
+BaseDados_Unica <- sheet_names %>%
+  map_df(~ read_excel(file_path, sheet = .x) %>%
+           mutate(sheet_name = .x)) # Adiciona o nome da aba como coluna (opcional)
+
+# preencher valores NA na coluna escolaridade_cargo com "Não Informado"
+
+
+
+# filtrar apenas campos que possuem servidores
+
+df_gini <- BaseDados_Unica |> janitor::clean_names() |> 
+  replace_na(list(escolaridade_cargo = "Sem informação")) |>
+  rename( "2026" = ano_2026,  "2023"= mai_23 ) |>
+  pivot_longer(`2023`:`2026`, names_to = "Ano", values_to = "remun") |>
+  filter(qtd > 0) 
+
+
+
+    
+```
+
+
+
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# construir uma base com agrupando o subgrupo e calculando a razao da média da remuneração entre o percentil 90 e 10
+
+# Expandir a base de dados com base na quantidade de observações
+df_expandido <- df_gini %>%
+  uncount(qtd)
+
+# Verificando o resultado
+ df_subgrupo <- df_expandido |> 
+   group_by(Ano, subgrupo) |>
+   dplyr::summarise(
+     percentil_90 = quantile(remun, 0.9, na.rm = TRUE),
+     percentil_10 = quantile(remun, 0.1, na.rm = TRUE)
+   ) |> 
+   dplyr::mutate(
+     razao = percentil_90/percentil_10
+   ) |> ungroup()
+ 
+ 
+```
+
+::: panel-tabset
+
+
+### Percentis 90 e 10
+  
+A Razão Salarial, representada pela linha tracejada, é definida como o quociente entre a média das
+remunerações dos 10% que recebem mais e a média das remunerações dos 10% que recebem menos no setor público
+brasileiro, para cada ano da série
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, subgrupo) |>
+  summarise(
+    corte_90 = quantile(remun, 0.9, na.rm = TRUE),
+    corte_10 = quantile(remun, 0.1, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "subgrupo")) |> 
+  group_by(Ano, subgrupo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_90], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_10], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.9", "percentil_0.10")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P90/P10")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 90 e abaixo de 10",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~subgrupo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+
+
+```
+
+### Percentis 80 e 20
+
+A Razão Salarial, representada pela linha tracejada, é definida como o quociente entre a média das
+remunerações dos 20% mais ricos e a média das remunerações dos 20% mais pobres no setor público
+brasileiro, para cada ano da série.
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+# Verificando o resultado
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, subgrupo) |>
+  summarise(
+    corte_80 = quantile(remun, 0.80, na.rm = TRUE),
+    corte_20 = quantile(remun, 0.20, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "subgrupo")) |> 
+  group_by(Ano, subgrupo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_80], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_20], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.80", "percentil_0.20")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P80/P20")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 80 e abaixo de 20",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~subgrupo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+```
+
+
+### Índice de Palma 
+
+O Índice de Palma adota estratégia distinta,correspondente à simples comparação entre as parcelas detidas pelos 10% que recebem mais e os 40% que recebem menos, respectivamente.
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# Verificando o resultado
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, subgrupo) |>
+  summarise(
+    corte_90 = quantile(remun, 0.90, na.rm = TRUE),
+    corte_40 = quantile(remun, 0.40, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "subgrupo")) |> 
+  group_by(Ano, subgrupo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_90], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_40], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.90", "percentil_0.40")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P90/P10")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 90 e abaixo de 40",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~subgrupo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+
+```
+
+
+
+
+:::
+
+
+## Por escolaridade
+
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(dplyr)
+library(readxl)
+library(purrr)
+library(tidyr)
+
+# Define o caminho do arquivo
+file_path <- "data/BaseDados_EstudoDesigualdades.xlsx"
+
+# Obtém os nomes de todas as abas no Excel
+sheet_names <- excel_sheets(file_path)
+
+# excluir abas que não serão utilizadas 
+# aba FORA 
+
+sheet_names <- sheet_names[!sheet_names %in% c("FORA")]
+
+# Lê todas as abas e combina em uma única base usando purrr::map
+BaseDados_Unica <- sheet_names %>%
+  map_df(~ read_excel(file_path, sheet = .x) %>%
+           mutate(sheet_name = .x)) # Adiciona o nome da aba como coluna (opcional)
+
+# preencher valores NA na coluna escolaridade_cargo com "Não Informado"
+
+
+
+# filtrar apenas campos que possuem servidores
+
+df_gini <- BaseDados_Unica |> janitor::clean_names() |> 
+  replace_na(list(escolaridade_cargo = "Sem informação")) |>
+  rename( "2026" = ano_2026,  "2023"= mai_23 ) |>
+  pivot_longer(`2023`:`2026`, names_to = "Ano", values_to = "remun") |>
+  filter(qtd > 0) 
+
+
+
+    
+```
+
+
+
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# construir uma base com agrupando o subgrupo e calculando a razao da média da remuneração entre o percentil 90 e 10
+
+# Expandir a base de dados com base na quantidade de observações
+df_expandido <- df_gini %>%
+  uncount(qtd)
+
+# Verificando o resultado
+ df_subgrupo <- df_expandido |> 
+   group_by(Ano, subgrupo) |>
+   dplyr::summarise(
+     percentil_90 = quantile(remun, 0.9, na.rm = TRUE),
+     percentil_10 = quantile(remun, 0.1, na.rm = TRUE)
+   ) |> 
+   dplyr::mutate(
+     razao = percentil_90/percentil_10
+   ) |> ungroup()
+ 
+ 
+```
+
+::: panel-tabset
+
+
+### Percentis 90 e 10
+  
+A Razão Salarial, representada pela linha tracejada, é definida como o quociente entre a média das
+remunerações dos 10% que recebem mais e a média das remunerações dos 10% que recebem menos no setor público
+brasileiro, para cada ano da série
+
+```{r, echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(scales)
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, escolaridade_cargo) |>
+  summarise(
+    corte_90 = quantile(remun, 0.9, na.rm = TRUE),
+    corte_10 = quantile(remun, 0.1, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "escolaridade_cargo")) |> 
+  group_by(Ano, escolaridade_cargo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_90], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_10], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.9", "percentil_0.10")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P90/P10")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 90 e abaixo de 10",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~escolaridade_cargo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+
+
+```
+
+### Percentis 80 e 20
+
+A Razão Salarial, representada pela linha tracejada, é definida como o quociente entre a média das
+remunerações dos 20% mais ricos e a média das remunerações dos 20% mais pobres no setor público
+brasileiro, para cada ano da série.
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+# Verificando o resultado
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, escolaridade_cargo) |>
+  summarise(
+    corte_80 = quantile(remun, 0.80, na.rm = TRUE),
+    corte_20 = quantile(remun, 0.20, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "escolaridade_cargo")) |> 
+  group_by(Ano, escolaridade_cargo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_80], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_20], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.80", "percentil_0.20")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P80/P20")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 80 e abaixo de 20",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~escolaridade_cargo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+```
+
+
+### Índice de Palma 
+
+O Índice de Palma adota estratégia distinta,correspondente à simples comparação entre as parcelas detidas pelos 10% que recebem mais e os 40% que recebem menos, respectivamente.
+
+```{r,echo=FALSE, warning = FALSE, message = FALSE,  fig.width = 10, fig.height = 10, fig.align = "center"}
+
+# Verificando o resultado
+
+df_subgrupo <- df_expandido |> 
+  group_by(Ano, escolaridade_cargo) |>
+  summarise(
+    corte_90 = quantile(remun, 0.90, na.rm = TRUE),
+    corte_40 = quantile(remun, 0.40, na.rm = TRUE),
+    .groups = "drop"
+  ) |> 
+  left_join(df_expandido, by = c("Ano", "escolaridade_cargo")) |> 
+  group_by(Ano, escolaridade_cargo) |> 
+  summarise(
+    percentil_numerador = mean(remun[remun >= corte_90], na.rm = TRUE),
+    percentil_denominador = mean(remun[remun <= corte_40], na.rm = TRUE),
+    razao = percentil_numerador / percentil_denominador,
+    .groups = "drop"
+  )
+
+#df_subgrupo
+df_long <- df_subgrupo %>%
+  pivot_longer(cols = c(percentil_numerador, percentil_denominador), 
+               names_to = "Percentil", 
+               values_to = "Remuneracao")
+
+# Criar o gráfico com facet_wrap por subgrupo
+ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
+  geom_col(position = "dodge") +  # Gráfico de barras lado a lado
+  geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
+            position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
+  scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
+                    labels = c("percentil_0.90", "percentil_0.40")) +
+  geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
+            color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
+  geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
+             color = "black", size = 3, inherit.aes = FALSE) +  # Pontos na linha
+  geom_text(data = df_subgrupo, aes(x = Ano, y = razao * 5000, label = round(razao, 2)), 
+            color = "black", size = 4, vjust = -0.5, inherit.aes = FALSE) +  # Rótulos da razão
+  scale_y_continuous(
+    name = "Remuneração (R$)",
+    labels = label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ","),  # Formatação em moeda brasileira
+    sec.axis = sec_axis(~ . / 5000, name = "Razão P90/P10")  # Ajustando o eixo secundário
+  ) +
+  labs(
+  title = "Razão entre as Remunerações médias nos Percentis acima de 90 e abaixo de 40",
+    x = "Ano",
+    fill = "Percentis"
+  ) +
+  facet_wrap(~escolaridade_cargo, scales = "free_y", ncol = 2) +  # Ajusta para 2 colunas e 5 linhas
+  expand_limits(y = max(df_long$Remuneracao, na.rm = TRUE) * 1.1) +  # Adiciona margem extra no eixo Y
+  theme_minimal()
+
+```
+
+
+
+
+:::
+
+
