@@ -1,5 +1,21 @@
 ---
 title: "Indicadores de Desigualdade"
+author:
+  - name: "CGINF - Coordenação Geral de Informações Gerenciais "
+    affiliation: "DIGID - Diretoria de Governança e Inteligência de dados"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    number-depth: 1
+    theme: cosmo  # Ou journal para um estilo mais formal
+    highlight-style: github
+    css: styles.css  # Arquivo customizado para ajustes
+    code_folding: show
+    code-fold: true
+    toc_float:
+      collapsed: false
 ---
 
 # Razão Salarial
@@ -115,7 +131,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.9", "percentil_0.10")) +
+                    labels = c("percentil_0.10", "percentil_0.90")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
@@ -176,7 +192,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.80", "percentil_0.20")) +
+                    labels = c("percentil_0.20", "percentil_0.80")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
@@ -235,7 +251,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.90", "percentil_0.40")) +
+                    labels = c("percentil_0.40", "percentil_0.90")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
@@ -375,7 +391,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.9", "percentil_0.10")) +
+                    labels = c("percentil_0.10", "percentil_0.90")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
@@ -436,7 +452,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.80", "percentil_0.20")) +
+                    labels = c("percentil_0.20", "percentil_0.80")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
@@ -495,7 +511,7 @@ ggplot(df_long, aes(x = Ano, y = Remuneracao, fill = Percentil)) +
   geom_text(aes(label = scales::label_dollar(prefix = "R$ ", big.mark = ".", decimal.mark = ",")(Remuneracao)), 
             position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +  # Rótulos das barras
   scale_fill_manual(values = c("percentil_numerador" = "blue", "percentil_denominador" = "red"),
-                    labels = c("percentil_0.90", "percentil_0.40")) +
+                    labels = c("percentil_0.40", "percentil_0.90")) +
   geom_line(data = df_subgrupo, aes(x = Ano, y = razao * 5000, group = 1), 
             color = "black", linetype = "dashed", size = 1, inherit.aes = FALSE) +  # Gráfico de linhas
   geom_point(data = df_subgrupo, aes(x = Ano, y = razao * 5000), 
