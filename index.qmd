@@ -7,7 +7,7 @@ author:
 date: "`r Sys.Date()`"
 abstract: |
   Este tutorial aborda o cálculo e a visualização do Índice de Gini, uma medida estatística amplamente utilizada para avaliar a desigualdade na distribuição de renda em populações ou regiões.
-categories: [Carreiras, Remuneração, FUncionalismo Público, Índice de Gini, Desigualdade Salarial, Servidores Públicos Federais, SIAPE]  
+categories: [Carreiras, Remuneração, Funcionalismo Público, Índice de Gini, Desigualdade Salarial, Servidores Públicos Federais, SIAPE]  
 format:
   html:
     toc: true
@@ -913,21 +913,21 @@ ggplot(df_expandido |> filter(Ano == "2026"), aes(x = remun)) +
 
 ### 2023
 ```{r final,  warning=FALSE, message=FALSE}
-df_expandido |> filter(Ano == "2023") |> ggstatsplot::ggbetweenstats(
-  x = subgrupo,
-  y = remun,
-  title = "Distribuição de Remuneração por Subgrupo (2023)"
-)
+# df_expandido |> filter(Ano == "2023") |> ggstatsplot::ggbetweenstats(
+#   x = subgrupo,
+#   y = remun,
+#   title = "Distribuição de Remuneração por Subgrupo (2023)"
+# )
 ```
 
 ### 2026
 
 ```{r final2,  warning=FALSE, message=FALSE}
-df_expandido |> filter(Ano == "2026") |> ggstatsplot::ggbetweenstats(
-  x = subgrupo,
-  y = remun,
-  title = "Distribuição de Remuneração por Subgrupo (2023)"
-)
+# df_expandido |> filter(Ano == "2026") |> ggstatsplot::ggbetweenstats(
+#   x = subgrupo,
+#   y = remun,
+#   title = "Distribuição de Remuneração por Subgrupo (2023)"
+# )
 ```
 
 

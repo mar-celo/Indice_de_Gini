@@ -10,6 +10,8 @@ website:
         text: Estatísticas descritivas
       - href: metodologia.qmd
         text: Outros indicadores de desigualdade
+      - href: graf.qmd
+        text: Graficos 
       
 
 format:
